@@ -19,6 +19,7 @@ class PencatatanJentik extends Model
         'gambar',
         'kode_pelapor',
         'rw',
+        'fasilitas_umum',
         'master_kecamatan_id',
         'master_kelurahan_id',
         'user_id'

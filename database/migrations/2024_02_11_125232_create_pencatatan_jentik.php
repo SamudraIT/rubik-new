@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->date('tanggal_pelaporan');
             $table->string('gambar');
             $table->string('kode_pelapor');
+            $table->string('fasilitas_umum')->nullable();
             $table->string('rw')->nullable();
             $table->timestamps();
         });
