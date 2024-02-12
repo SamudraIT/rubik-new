@@ -18,6 +18,7 @@ class UserProfile extends Model
         'rt',
         'rw',
         'user_id',
+        'nakes',
         'master_rumah_sakit_id',
         'master_kelurahan_id',
         'master_kecamatan_id'

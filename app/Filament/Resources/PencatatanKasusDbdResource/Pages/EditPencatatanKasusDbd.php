@@ -10,6 +10,15 @@ class EditPencatatanKasusDbd extends EditRecord
 {
     protected static string $resource = PencatatanKasusDbdResource::class;
 
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['gejala_penyakit'] = explode(', ', $data['gejala_penyakit']);
+
+        return $data;
+
+    }
+
     protected function getHeaderActions(): array
     {
         return [

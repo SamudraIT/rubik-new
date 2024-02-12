@@ -12,11 +12,12 @@ return new class extends Migration {
     {
         Schema::create('user_profile', function (Blueprint $table) {
             $table->id();
-            $table->string('no_kk');
-            $table->string('alamat');
-            $table->string('status_hunian');
-            $table->string('rt');
-            $table->string('rw');
+            $table->string('no_kk')->nullable();
+            $table->string('alamat')->nullable();
+            $table->string('status_hunian')->nullable();
+            $table->string('rt')->nullable();
+            $table->string('rw')->nullable();
+            $table->boolean('nakes')->default(false);
             $table->timestamps();
         });
     }

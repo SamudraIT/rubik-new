@@ -4,14 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PencatatanJentikResource\Pages;
 use App\Filament\Resources\PencatatanJentikResource\RelationManagers;
+use App\Models\MasterKecamatan;
+use App\Models\MasterKelurahan;
 use App\Models\PencatatanJentik;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -35,8 +42,8 @@ class PencatatanJentikResource extends Resource
                 Section::make('Informasi Pelapor')
                     ->description('Masukan detail informasi pelapor')
                     ->schema([
-                        TextInput::make('nama_pasien')
-                            ->label('Nama Pasien')
+                        TextInput::make('nama_pelapor')
+                            ->label('Nama Pelapor')
                             ->required(),
                         TextInput::make('kode_pelapor')
                             ->label('Kode Pelapor')
@@ -60,7 +67,49 @@ class PencatatanJentikResource extends Resource
                                 'Tempat dan Fasilitas Umum' => 'Tempat dan Fasilitas Umum'
                             ])
                             ->requiredWith('fasilitas_umum'),
+                        TextInput::make('fasilitas_umum')
+                            ->label('Fasilitas Umum')
+                            ->requiredWith('lokasi')
+                            ->hidden(fn(Get $get) => $get('lokasi') != 'Tempat dan Fasilitas Umum'),
+                        DatePicker::make('tanggal_pelaporan')
+                            ->label('Tanggal Pelaporan')
+                            ->required(),
+                        FileUpload::make('gambar')
+                            ->label('Gambar')
+                            ->acceptedFileTypes(['image/*'])
+                            ->maxSize(3027)
+                            ->directory('gambar-jentik')
+                            ->storeFileNamesIn('original_filename')
+                            ->required(),
+                    ])->columns(2),
 
+                Section::make('Keberadaan Jentik')
+                    ->description('Masukan detail keberadaan jentik')
+                    ->schema([
+                        Select::make('lokasi_jentik')
+                            ->label('Lokasi Jentik')
+                            ->options([
+                                'Dispenser' => 'Dispenser',
+                                'Bak Mandi' => 'Bak Mandi',
+                                'Bak Belakang Kulkas' => 'Bak Belakang Kulkas',
+                                'Tatakan Pot Luar Ruangan' => 'Tatakan Pot Luar Ruangan',
+                                'Tempat Minum Hewan Peliharaan' => 'Tempat Minum Hewan Peliharaan',
+                                'Tempat Penampungan Air Hujan/AC' => 'Tempat Penampungan Air Hujan/AC',
+                                'Ban Bekas' => 'Ban Bekas',
+                                'Kaleng/Botol Bekas' => 'Kaleng/Botol Bekas',
+                                'Ovitrap' => 'Ovitrap',
+                                'Lainnya' => 'Lainnya',
+                            ])
+                            ->multiple()
+                            ->searchable()
+                            ->required(),
+                        Select::make('status_jentik')
+                            ->label('Status Jentik')
+                            ->options([
+                                'Ada/Positif' => 'Ada/Positif',
+                                'Tidak/Negatif' => 'Tidak/Negatif'
+                            ])
+                            ->required()
                     ])->columns(2),
             ]);
     }
@@ -69,10 +118,29 @@ class PencatatanJentikResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('nama_pelapor')
+                    ->label('Nama Pelapor'),
+                TextColumn::make('kode_pelapor')
+                    ->label('Kode Pelapor'),
+                TextColumn::make('kepemilikan_ovitrap')
+                    ->label('Kepemilikan Ovitrap'),
+                TextColumn::make('lokasi')
+                    ->label('Lokasi'),
+                TextColumn::make('keberadaanJentik.lokasi_jentik')
+                    ->label('Lokasi Jentik'),
+                TextColumn::make('keberadaanJentik.status_jentik')
+                    ->label('Status Jentik'),
+                TextColumn::make('tanggal_pelaporan')
+                    ->label('Tanggal Pelaporan')
+                    ->date(),
             ])
             ->filters([
-                //
+                SelectFilter::make('master_kecamatan_id')
+                    ->label('Kecamatan')
+                    ->options(MasterKecamatan::pluck('nama', 'id')),
+                SelectFilter::make('master_kelurahan_id')
+                    ->label('Kelurahan')
+                    ->options(MasterKelurahan::pluck('nama', 'id')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::table('user_profile', function (Blueprint $table) {
             $table->foreignId('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreignId('master_rumah_sakit_id')->references('id')->on('master_rumah_sakit')->cascadeOnDelete();
+            $table->foreignId('master_rumah_sakit_id')->nullable()->references('id')->on('master_rumah_sakit')->cascadeOnDelete();
             $table->foreignId('master_kelurahan_id')->references('id')->on('master_kelurahan')->cascadeOnDelete();
             $table->foreignId('master_kecamatan_id')->references('id')->on('master_kecamatan')->cascadeOnDelete();
         });
@@ -25,7 +25,7 @@ return new class extends Migration {
     {
         Schema::table('user_profile', function (Blueprint $table) {
             $table->foreignId('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreignId('master_rumah_sakit_id')->references('id')->on('master_rumah_sakit')->cascadeOnDelete();
+            $table->foreignId('master_rumah_sakit_id')->nullable()->references('id')->on('master_rumah_sakit')->cascadeOnDelete();
             $table->foreignId('master_kelurahan_id')->references('id')->on('master_kelurahan')->cascadeOnDelete();
             $table->foreignId('master_kecamatan_id')->references('id')->on('master_kecamatan')->cascadeOnDelete();
         });
