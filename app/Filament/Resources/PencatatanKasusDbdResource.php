@@ -7,6 +7,7 @@ use App\Filament\Resources\PencatatanKasusDbdResource\RelationManagers;
 use App\Models\MasterKecamatan;
 use App\Models\MasterKelurahan;
 use App\Models\MasterRumahSakit;
+use App\Models\ModelHasRole;
 use App\Models\PencatatanKasusDbd;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -33,6 +34,22 @@ class PencatatanKasusDbdResource extends Resource
     protected static ?string $navigationGroup = 'Catatan';
 
     protected static ?string $modelLabel = 'Pencatatan Kasus DBD';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $find_role = ModelHasRole::where('model_id', auth()->id())->first();
+        $user_role = $find_role->role;
+
+        if ($user_role['name'] == 'nakes') {
+            return parent::getEloquentQuery()->where('master_rumah_sakit_id', auth()->user()->profile->master_rumah_sakit_id);
+        } else if ($user_role['name'] == 'penghuni') {
+            return parent::getEloquentQuery()->where('user_id', auth()->id())->where('terkonfirmasi_nakes', true);
+        } else if ($user_role['name'] == 'supervisor') {
+            return parent::getEloquentQuery()->where('master_kecamatan_id', auth()->user()->profile->master_kecamatan_id);
+        }
+
+        return parent::getEloquentQuery();
+    }
 
     public static function form(Form $form): Form
     {
@@ -100,6 +117,22 @@ class PencatatanKasusDbdResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $find_role = ModelHasRole::where('model_id', auth()->id())->first();
+        $user_role = $find_role->role;
+
+        $filters = [];
+
+        if ($user_role['name'] == 'dinas' || $user_role['name'] == 'super_admin') {
+            $filters = [
+                SelectFilter::make('master_kecamatan_id')
+                    ->label('Kecamatan')
+                    ->options(MasterKecamatan::pluck('nama', 'id')),
+                SelectFilter::make('master_kelurahan_id')
+                    ->label('Kelurahan')
+                    ->options(MasterKelurahan::pluck('nama', 'id')),
+            ];
+        }
+
         return $table
             ->columns([
                 TextColumn::make('nama_pasien')
@@ -118,15 +151,7 @@ class PencatatanKasusDbdResource extends Resource
                     ->label('Tanggal Terkonfirmasi')
                     ->sortable(),
             ])
-            ->filters([
-                SelectFilter::make('master_kecamatan_id')
-                    ->options(MasterKecamatan::pluck('nama', 'id'))
-                    ->label('Kecamatan'),
-                SelectFilter::make('master_kelurahan_id')
-                    ->options(MasterKelurahan::pluck('nama', 'id'))
-                    ->label('Kelurahan'),
-
-            ])
+            ->filters($filters)
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])

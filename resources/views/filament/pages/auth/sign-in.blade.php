@@ -13,7 +13,7 @@
     {{ $this->form }}
 
     <div style="display: flex; align-items: center; justify-content: flex-end;">
-      <a href="/dashboard/reset-password" style="font-size: .8rem;">Lupa Password?</a>
+      <a href="/admin/reset-password" style="font-size: .8rem;">Lupa Password?</a>
     </div>
 
     <x-filament-panels::form.actions :actions="$this->getCachedFormActions()" :full-width="$this->hasFullWidthFormActions()" />

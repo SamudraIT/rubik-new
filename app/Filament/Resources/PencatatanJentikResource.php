@@ -6,6 +6,7 @@ use App\Filament\Resources\PencatatanJentikResource\Pages;
 use App\Filament\Resources\PencatatanJentikResource\RelationManagers;
 use App\Models\MasterKecamatan;
 use App\Models\MasterKelurahan;
+use App\Models\ModelHasRole;
 use App\Models\PencatatanJentik;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -34,6 +35,20 @@ class PencatatanJentikResource extends Resource
     protected static ?string $navigationGroup = 'Catatan';
 
     protected static ?string $modelLabel = 'Pencatatan Jentik';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $find_role = ModelHasRole::where('model_id', auth()->id())->first();
+        $user_role = $find_role->role;
+
+        if ($user_role['name'] == 'penghuni') {
+            return parent::getEloquentQuery()->where('user_id', auth()->id());
+        } else if ($user_role['name'] == 'supervisor') {
+            return parent::getEloquentQuery()->where('master_kecamatan_id', auth()->user()->profile->master_kecamatan_id);
+        }
+
+        return parent::getEloquentQuery();
+    }
 
     public static function form(Form $form): Form
     {
@@ -116,6 +131,22 @@ class PencatatanJentikResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $find_role = ModelHasRole::where('model_id', auth()->id())->first();
+        $user_role = $find_role->role;
+
+        $filters = [];
+
+        if ($user_role['name'] == 'dinas' || $user_role['name'] == 'super_admin') {
+            $filters = [
+                SelectFilter::make('master_kecamatan_id')
+                    ->label('Kecamatan')
+                    ->options(MasterKecamatan::pluck('nama', 'id')),
+                SelectFilter::make('master_kelurahan_id')
+                    ->label('Kelurahan')
+                    ->options(MasterKelurahan::pluck('nama', 'id')),
+            ];
+        }
+
         return $table
             ->columns([
                 TextColumn::make('nama_pelapor')
@@ -134,14 +165,7 @@ class PencatatanJentikResource extends Resource
                     ->label('Tanggal Pelaporan')
                     ->date(),
             ])
-            ->filters([
-                SelectFilter::make('master_kecamatan_id')
-                    ->label('Kecamatan')
-                    ->options(MasterKecamatan::pluck('nama', 'id')),
-                SelectFilter::make('master_kelurahan_id')
-                    ->label('Kelurahan')
-                    ->options(MasterKelurahan::pluck('nama', 'id')),
-            ])
+            ->filters($filters)
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
