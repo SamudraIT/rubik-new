@@ -30,4 +30,14 @@ class PencatatanJentik extends Model
     {
         return $this->belongsTo(PencatatanLokasiJentik::class, 'id', 'pencatatan_jentik_id');
     }
+
+    public function kecamatan(): BelongsTo
+    {
+        return $this->belongsTo(MasterKecamatan::class, 'master_kecamatan_id', 'id');
+    }
+
+    public function kelurahan(): BelongsTo
+    {
+        return $this->belongsTo(MasterKelurahan::class, 'master_kelurahan_id', 'id');
+    }
 }

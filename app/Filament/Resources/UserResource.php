@@ -4,9 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\MasterRumahSakit;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -33,12 +35,20 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name')->searchable()->preload()->required(),
+                Forms\Components\Toggle::make('nakes')
+                    ->label('Tenaga Kesehatan')
+                    ->reactive()
+                    ->requiredWith('master_rumah_sakit_id'),
+                Forms\Components\Select::make('master_rumah_sakit_id')
+                    ->label('Rumah Sakit')
+                    ->options(MasterRumahSakit::pluck('nama', 'id'))
+                    ->hidden(fn(Get $get) => $get('nakes') != true)
+                    ->requiredWith('nakes'),
             ]);
     }
 
