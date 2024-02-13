@@ -32,36 +32,36 @@ class ZPencatatanJentikChart extends ApexChartWidget
     protected function getOptions(): array
     {
 
-        $data = DB::table('pencatatan_kasus_dbd')
-            ->select(DB::raw('MONTH(tanggal_terkonfirmasi) as month, status_pasien, COUNT(*) as count'))
-            ->whereNotNull('status_pasien')
-            ->whereBetween('tanggal_terkonfirmasi', [
-                Carbon::parse($this->filterFormData['date_start']),
-                Carbon::parse($this->filterFormData['date_end']),
-            ])
-            ->groupBy('month', 'status_pasien')
+        $data = DB::table('pencatatan_lokasi_jentik')
+            ->select(DB::raw('MONTH(created_at) as month, status_jentik, COUNT(*) as count'))
+            ->whereNotNull('status_jentik')
+            // ->whereBetween('created_at', [
+            //     Carbon::parse($this->filterFormData['date_start']),
+            //     Carbon::parse($this->filterFormData['date_end']),
+            // ])
+            ->groupBy('month', 'status_jentik')
             ->get();
 
         $transformedData = [];
 
         foreach ($data as $record) {
             $month = $record->month;
-            $status_pasien = $record->status_pasien;
+            $status = $record->status_jentik;
             $count = $record->count;
 
-            if (!isset($transformedData[$status_pasien])) {
-                $transformedData[$status_pasien] = array_fill(1, 12, 0);
+            if (!isset($transformedData[$status])) {
+                $transformedData[$status] = array_fill(1, 12, 0);
             }
 
-            $transformedData[$status_pasien][$month] = $count;
+            $transformedData[$status][$month] = $count;
         }
 
         $finalData = [];
 
-        foreach ($transformedData as $status_pasien => $counts) {
+        foreach ($transformedData as $status => $counts) {
             $dataForStatus = [
-                'name' => $status_pasien,
-                'data' => array_values($counts)
+                'name' => $status,
+                'data' => array_values($counts),
             ];
 
             $finalData[] = $dataForStatus;
@@ -89,8 +89,8 @@ class ZPencatatanJentikChart extends ApexChartWidget
                 ],
             ],
             'colors' => [
-                '#fcd34d',
-                '#fbbf24',
+                '#ef4444',
+                '#10b981',
                 '#f59e0b',
             ],
         ];

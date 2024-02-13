@@ -20,8 +20,9 @@
           </tr>
         </thead>
         <tbody>
+          {{-- admin/pencatatan-jentiks?tableFilters[master_kecamatan_id][value]=1&tableFilters[master_kelurahan_id][value]=1 --}}
           @foreach($this->getDataJentik() as $data)
-          <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+          <tr onclick="" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
             <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
               {{ $data->kecamatan->nama }}
             </th>
@@ -75,5 +76,4 @@
       </table>
     </div>
   </div>
-
 </x-filament-panels::page>

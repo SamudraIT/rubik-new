@@ -17,10 +17,22 @@ class StatsOverview extends BaseWidget
         $lokasiJentik = PencatatanLokasiJentik::select('status_jentik', DB::raw('COUNT(*) as count'))
             ->groupBy('status_jentik')
             ->get();
+        $pencatatanJentik = PencatatanJentik::all();
 
         $angkaBebasJentik = $lokasiJentik->where('status_jentik', 'Tidak/Negatif')->first()->count ?? 0;
 
         $angkaJentik = $lokasiJentik->where('status_jentik', 'Ada/Positif')->first()->count ?? 0;
+
+        $persentase_positif = 0;
+        $persentase_negatif = 0;
+
+        if ($pencatatanJentik->count() > 0) {
+            $persentase_positif = round(($angkaJentik / $pencatatanJentik->count()) * 100, 2);
+        }
+
+        if ($pencatatanJentik->count() > 0) {
+            $persentase_negatif = round(($angkaBebasJentik / $pencatatanJentik->count()) * 100, 2);
+        }
 
         return [
             Stat::make(
@@ -45,12 +57,12 @@ class StatsOverview extends BaseWidget
                 label: 'Angka Jentik',
                 value: $angkaJentik
             )
-                ->description('Persentase: 30%'),
+                ->description("Persentase: $persentase_positif%"),
             Stat::make(
                 label: 'Angka Bebas Jentik',
                 value: $angkaBebasJentik
             )
-                ->description('Persentase: 30%'),
+                ->description("Persentase: $persentase_negatif%"),
         ];
     }
 }

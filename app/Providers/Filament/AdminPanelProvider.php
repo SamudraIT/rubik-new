@@ -50,6 +50,10 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 // Pages\Dashboard::class,
             ])
+            ->renderHook(
+                'panels::topbar.start',
+                fn() => view('partials.header'),
+            )
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 FilamentApexChartsPlugin::make()
