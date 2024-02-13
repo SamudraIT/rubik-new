@@ -5,6 +5,7 @@ namespace App\Filament\Pages\Auth;
 use App\Models\UserProfile;
 use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use Illuminate\Validation\ValidationException;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Component;
@@ -36,25 +37,26 @@ class SignIn extends Login
             ->label('No KK / Email')
             ->required()
             ->autocomplete()
-            ->autofocus();
+            ->autofocus()
+            ->extraInputAttributes(['tabindex' => 1]);
     }
 
     public function authenticate(): ?LoginResponse
     {
-        try{
+        try {
             $this->rateLimit(2);
-        }catch(TooManyRequestsException $exception){
+        } catch (TooManyRequestsException $exception) {
             Notification::make()
-            ->title(__('filament-panels::pages/auth/login.notifications.throttled.title', [
-                'seconds' => $exception->secondsUntilAvailable,
-                'minutes' => ceil($exception->secondsUntilAvailable / 60),
-            ]))
-            ->body(array_key_exists('body', __('filament-panels::pages/auth/login.notifications.throttled') ?: []) ? __('filament-panels::pages/auth/login.notifications.throttled.body', [
-                'seconds' => $exception->secondsUntilAvailable,
-                'minutes' => ceil($exception->secondsUntilAvailable / 60),
-            ]) : null)
-            ->danger()
-            ->send();
+                ->title(__('filament-panels::pages/auth/login.notifications.throttled.title', [
+                    'seconds' => $exception->secondsUntilAvailable,
+                    'minutes' => ceil($exception->secondsUntilAvailable / 60),
+                ]))
+                ->body(array_key_exists('body', __('filament-panels::pages/auth/login.notifications.throttled') ?: []) ? __('filament-panels::pages/auth/login.notifications.throttled.body', [
+                    'seconds' => $exception->secondsUntilAvailable,
+                    'minutes' => ceil($exception->secondsUntilAvailable / 60),
+                ]) : null)
+                ->danger()
+                ->send();
 
             return null;
         }
@@ -75,8 +77,7 @@ class SignIn extends Login
 
             $user = Filament::auth()->user();
 
-            if (($user instanceof FilamentUser) &&(!$user->canAccessPanel(Filament::getCurrentPanel())))
-            {
+            if (($user instanceof FilamentUser) && (!$user->canAccessPanel(Filament::getCurrentPanel()))) {
                 Filament::auth()->logout();
 
                 $this->throwFailureValidationException();
@@ -100,8 +101,7 @@ class SignIn extends Login
 
             $user = Filament::auth()->user();
 
-            if (($user instanceof FilamentUser) && (!$user->canAccessPanel(Filament::getCurrentPanel())))
-            {
+            if (($user instanceof FilamentUser) && (!$user->canAccessPanel(Filament::getCurrentPanel()))) {
                 Filament::auth()->logout();
 
                 $this->throwFailureValidationException();
@@ -111,6 +111,14 @@ class SignIn extends Login
 
             return app(LoginResponse::class);
         }
+    }
+
+    protected function throwFailureValidationException(): never
+    {
+        throw ValidationException::withMessages([
+            'data.no_kk' => 'invalid credentials',
+            'data.password' => 'Invalid credentials'
+        ]);
     }
 
     protected function getCredentialsFromFormData(array $data): array

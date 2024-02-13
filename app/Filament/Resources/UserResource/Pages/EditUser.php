@@ -11,7 +11,8 @@ class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 
-    protected function mutateFormDataBeforeFill(array $data): array {
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
         $profile = UserProfile::where('user_id', $data['id'])->first();
 
         if ($profile && $profile['nakes']) {
