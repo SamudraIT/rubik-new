@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\MasterKecamatan;
 use App\Models\MasterKelurahan;
+use App\Models\ModelHasRole;
 use App\Models\UserProfile;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Section;
@@ -27,7 +28,10 @@ class Profile extends Page
     public function mount(): void
     {
         if (auth()->user()->profile) {
-            $user_data = array_merge(auth()->user()->profile->attributesToArray(), ['name' => auth()->user()->name]);
+            $user_data = array_merge(auth()->user()->profile->attributesToArray(), [
+                'name' => auth()->user()->name,
+                'email' => auth()->user()->email
+            ]);
             $this->form->fill($user_data);
         } else {
             $this->form->fill(['name' => auth()->user()->name]);
@@ -36,51 +40,91 @@ class Profile extends Page
 
     public function form(Form $form): Form
     {
+        $find_role = ModelHasRole::where('model_id', auth()->id())->first();
+        $user_role = $find_role->role;
+        $schema = [];
+
         $kecamatanOpts = MasterKecamatan::pluck('nama', 'id');
         $kelurahanOpts = MasterKelurahan::pluck('nama', 'id');
 
-        return $form->schema([
-            Section::make('Informasi Akun')
-                ->description('Informasi akun anda')
-                ->schema([
-                    TextInput::make('name')
-                        ->label('Nama')
-                        ->default(auth()->user()->name)
-                        ->disabled()
-                ]),
-            Section::make('Informasi Pribadi')
-                ->description('Informasi pribadi anda')
-                ->schema([
-                    TextInput::make('no_kk')
-                        ->label('No KK')
-                        ->minLength(16)
-                        ->required(),
-                    TextInput::make('alamat')
-                        ->label('Alamat')
-                        ->required(),
-                    TextInput::make('rt')
-                        ->label('RT')
-                        ->required(),
-                    TextInput::make('rw')
-                        ->label('RW')
-                        ->required(),
-                    Select::make('status_hunian')
-                        ->label('Status Hunian')
-                        ->options([
-                            'Milik Pribadi' => 'Milik Pribadi',
-                            'Sewa/Kontrak' => 'Sewa/Kontrak'
-                        ])
-                        ->required(),
-                    Select::make('master_kelurahan_id')
-                        ->label('Kelurahan')
-                        ->options($kelurahanOpts)
-                        ->required(),
-                    Select::make('master_kecamatan_id')
-                        ->label('Kecamatan')
-                        ->options($kecamatanOpts)
-                        ->required(),
-                ])->columns(2)
-        ])->statePath('data');
+        if ($user_role['name'] == 'supervisor') {
+            $schema = [
+                Section::make('Informasi Akun')
+                    ->description('Informasi akun anda')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nama')
+                            ->disabled(),
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->disabled()
+                    ]),
+                Section::make('Informasi Pribadi')
+                    ->description('Informasi pribadi anda')
+                    ->schema([
+                        TextInput::make('rt')
+                            ->label('RT')
+                            ->required(),
+                        TextInput::make('rw')
+                            ->label('RW')
+                            ->required(),
+                        Select::make('master_kelurahan_id')
+                            ->label('Kelurahan')
+                            ->options($kelurahanOpts)
+                            ->required(),
+                        Select::make('master_kecamatan_id')
+                            ->label('Kecamatan')
+                            ->options($kecamatanOpts)
+                            ->required(),
+                    ])->columns(2),
+            ];
+        } else {
+            $schema = [
+                Section::make('Informasi Akun')
+                    ->description('Informasi akun anda')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nama')
+                            ->default(auth()->user()->name)
+                            ->disabled()
+                    ]),
+                Section::make('Informasi Pribadi')
+                    ->description('Informasi pribadi anda')
+                    ->schema([
+                        TextInput::make('no_kk')
+                            ->label('No KK')
+                            ->minLength(16)
+                            ->required(),
+                        TextInput::make('alamat')
+                            ->label('Alamat')
+                            ->required(),
+                        TextInput::make('rt')
+                            ->label('RT')
+                            ->required(),
+                        TextInput::make('rw')
+                            ->label('RW')
+                            ->required(),
+                        Select::make('status_hunian')
+                            ->label('Status Hunian')
+                            ->options([
+                                'Milik Pribadi' => 'Milik Pribadi',
+                                'Sewa/Kontrak' => 'Sewa/Kontrak'
+                            ])
+                            ->required(),
+                        Select::make('master_kelurahan_id')
+                            ->label('Kelurahan')
+                            ->options($kelurahanOpts)
+                            ->required(),
+                        Select::make('master_kecamatan_id')
+                            ->label('Kecamatan')
+                            ->options($kecamatanOpts)
+                            ->required(),
+                    ])->columns(2)
+            ];
+        }
+
+
+        return $form->schema($schema)->statePath('data');
     }
 
     public function submit(): void

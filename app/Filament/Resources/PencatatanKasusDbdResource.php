@@ -9,18 +9,22 @@ use App\Models\MasterKelurahan;
 use App\Models\MasterRumahSakit;
 use App\Models\ModelHasRole;
 use App\Models\PencatatanKasusDbd;
+use Filament\Tables\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PencatatanKasusDbdResource extends Resource
@@ -121,12 +125,71 @@ class PencatatanKasusDbdResource extends Resource
         $user_role = $find_role->role;
 
         $filters = [];
+        $actions = [];
+
+        if ($user_role['name'] == 'penghuni') {
+            $actions = [
+                Tables\Actions\EditAction::make(),
+            ];
+        } else {
+            $actions = [
+                Action::make('confirm')
+                    ->visible(function (Model $record) {
+                        return $record->terkonfirmasi_nakes ? false : true;
+                    })
+                    ->label('Confirm')
+                    ->action(function (PencatatanKasusDbd $record) {
+                        $record->update([
+                            'terkonfirmasi_nakes' => true
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Laporan berhasil di konfirmasi')
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Konfirmasi Kasus')
+                    ->color('success')
+                    ->modalIcon('heroicon-o-information-circle')
+                    ->modalDescription('Anda yakin ingin mengkonfirmasi?')
+                    ->modalSubmitActionLabel('Ya, Saya yakin'),
+                Action::make('cancel')
+                    ->visible(function (Model $record) {
+                        return $record->terkonfirmasi_nakes ? true : false;
+                    })
+                    ->label('Cancel')
+                    ->action(function (PencatatanKasusDbd $record) {
+                        $record->update([
+                            'terkonfirmasi_nakes' => false
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Konfirmasi Laporan berhasil di batalkan')
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Konfirmasi Kasus')
+                    ->color('danger')
+                    ->modalIcon('heroicon-o-information-circle')
+                    ->modalDescription('Anda yakin ingin membatalkan konfirmasi?')
+                    ->modalSubmitActionLabel('Ya, Saya yakin'),
+                Tables\Actions\EditAction::make(),
+            ];
+        }
 
         if ($user_role['name'] == 'dinas' || $user_role['name'] == 'super_admin') {
             $filters = [
                 SelectFilter::make('master_kecamatan_id')
                     ->label('Kecamatan')
                     ->options(MasterKecamatan::pluck('nama', 'id')),
+                SelectFilter::make('master_kelurahan_id')
+                    ->label('Kelurahan')
+                    ->options(MasterKelurahan::pluck('nama', 'id')),
+            ];
+        } else if ($user_role['name'] == 'supervisor') {
+            $filters = [
                 SelectFilter::make('master_kelurahan_id')
                     ->label('Kelurahan')
                     ->options(MasterKelurahan::pluck('nama', 'id')),
@@ -150,11 +213,20 @@ class PencatatanKasusDbdResource extends Resource
                 TextColumn::make('tanggal_terkonfirmasi')
                     ->label('Tanggal Terkonfirmasi')
                     ->sortable(),
+                TextColumn::make('terkonfirmasi_nakes')
+                    ->label('Status Laporan')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Terkonfirmasi' => 'success',
+                        'Tidak Terkonfirmasi' => 'danger'
+                    })
+                    ->getStateUsing(function ($record) {
+                        return $record->terkonfirmasi_nakes ? 'Terkonfirmasi' : 'Tidak Terkonfirmasi';
+                    })
+
             ])
             ->filters($filters)
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            ->actions($actions)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

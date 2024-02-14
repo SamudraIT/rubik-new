@@ -45,7 +45,9 @@ class StatsOverview extends BaseWidget
             ),
             Stat::make(
                 label: 'Total Penghuni',
-                value: User::count()
+                value: User::whereHas('roles', function ($query) {
+                    $query->where('name', 'penghuni');
+                })->count() ?? 0
             ),
             Stat::make(
                 label: 'Total Fasilitas Umum',

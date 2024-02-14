@@ -82,6 +82,8 @@ class FormLaporan extends Page
                         FileUpload::make('gambar')
                             ->label('Gambar')
                             ->directory('gambar-jentik')
+                            ->acceptedFileTypes(['image/*'])
+                            ->maxSize(3027)
                             ->storeFileNamesIn('original_filename')
                             ->required()
                     ])->columns(2),

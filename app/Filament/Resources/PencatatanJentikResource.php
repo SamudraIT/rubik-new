@@ -145,6 +145,12 @@ class PencatatanJentikResource extends Resource
                     ->label('Kelurahan')
                     ->options(MasterKelurahan::pluck('nama', 'id')),
             ];
+        } else if ($user_role['name'] == 'supervisor') {
+            $filters = [
+                SelectFilter::make('master_kelurahan_id')
+                    ->label('Kelurahan')
+                    ->options(MasterKelurahan::pluck('nama', 'id')),
+            ];
         }
 
         return $table
