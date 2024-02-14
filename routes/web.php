@@ -28,7 +28,7 @@ Route::get('/api/timer', function () {
     $user = auth()->user();
 
     $lastCase = PencatatanJentik::where('user_id', $user->id)
-        ->orderBy('reported_date', 'desc')
+        ->orderBy('tanggal_pelaporan', 'desc')
         ->first();
 
     return response()->json($lastCase);
