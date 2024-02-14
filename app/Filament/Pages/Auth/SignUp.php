@@ -38,6 +38,7 @@ class SignUp extends Register
             TextInput::make('no_kk')
               ->label('No KK')
               ->required()
+              ->minLength(16)
               ->maxLength(255),
             TextInput::make('alamat')
               ->label('Alamat')
